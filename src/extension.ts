@@ -1,26 +1,51 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 import * as vscode from 'vscode';
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+import {
+    registerCloseModelCommand,
+    registerOpenFileAtLineCommand,
+    registerSelectFolderCommand
+} from './commands';
+import { CliResolver, TomixCliClient } from './cli';
+import { TabularTreeProvider } from './explorer';
+
+const VIEW_ID = 'tomix-studio.explorer';
+const CONTEXT_MODEL_OPEN = 'tomix-studio.modelOpen';
+
 export function activate(context: vscode.ExtensionContext) {
+    const logger = vscode.window.createOutputChannel('tomix studio', { log: true });
+    context.subscriptions.push(logger);
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "tomix-studio" is now active!');
+    const resolver = new CliResolver();
+    const cli = new TomixCliClient(resolver, logger);
+    const treeProvider = new TabularTreeProvider(cli, logger);
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('tomix-studio.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from tomix studio!');
-	});
+    const treeView = vscode.window.createTreeView(VIEW_ID, {
+        treeDataProvider: treeProvider,
+        showCollapseAll: true
+    });
+    context.subscriptions.push(treeView);
 
-	context.subscriptions.push(disposable);
+    context.subscriptions.push(registerSelectFolderCommand(cli, treeProvider));
+    context.subscriptions.push(registerCloseModelCommand(cli, treeProvider));
+    context.subscriptions.push(registerOpenFileAtLineCommand());
+
+    context.subscriptions.push(
+        vscode.workspace.onDidChangeConfiguration(event => {
+            if (event.affectsConfiguration('tomix-studio.cliPath')) {
+                treeProvider.refresh();
+            }
+        })
+    );
+
+    // Restore from the active `tx connect` session (single source of truth).
+    cli.getConnection().then(async conn => {
+        if (conn.active && conn.connection.model) {
+            treeProvider.setModelPath(conn.connection.model);
+            await vscode.commands.executeCommand('setContext', CONTEXT_MODEL_OPEN, true);
+        }
+    }).catch(error => {
+        logger.appendLine(`No active tx session to restore: ${error instanceof Error ? error.message : String(error)}`);
+    });
 }
 
-// This method is called when your extension is deactivated
 export function deactivate() {}

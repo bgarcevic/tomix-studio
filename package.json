@@ -9,15 +9,84 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onView:tomix-studio.explorer"
+  ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tomix-studio",
+          "title": "tomix studio",
+          "icon": "assets/tomix-explorer.svg"
+        }
+      ]
+    },
+    "views": {
+      "tomix-studio": [
+        {
+          "id": "tomix-studio.explorer",
+          "name": "Tabular Model",
+          "visibility": "visible"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "tomix-studio.helloWorld",
-        "title": "Hello World"
+        "command": "tomix-studio.selectFolder",
+        "title": "Select Model",
+        "category": "tomix studio"
+      },
+      {
+        "command": "tomix-studio.closeModel",
+        "title": "Close Model",
+        "category": "tomix studio"
+      },
+      {
+        "command": "tomix-studio.openFileAtLine",
+        "title": "Open File at Line",
+        "category": "tomix studio"
       }
-    ]
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "tomix-studio.openFileAtLine",
+          "when": "false"
+        },
+        {
+          "command": "tomix-studio.selectFolder",
+          "when": "true"
+        },
+        {
+          "command": "tomix-studio.closeModel",
+          "when": "tomix-studio.modelOpen"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "tomix-studio.selectFolder",
+          "when": "view == 'tomix-studio.explorer'",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tomix-studio.closeModel",
+          "when": "view == 'tomix-studio.explorer' && tomix-studio.modelOpen",
+          "group": "navigation@2"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "tomix studio",
+      "properties": {
+        "tomix-studio.cliPath": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Absolute path to the `tx` CLI. Leave empty to resolve `tx` (or `tx.cmd` on Windows) from PATH."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
