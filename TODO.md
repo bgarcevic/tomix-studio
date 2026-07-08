@@ -5,5 +5,7 @@
       (no `--type expression` in `tx ls` today). When `tx` adds it, port the
       `expressions` container and leaf nodes following the relationships/cultures
       pattern in `src/explorer.ts`.
-- [ ] Explorer search webview pane (was `ExplorerSearchViewProvider` in the old
-      extension). Deferred until the tree is stable.
+- [x] Explorer search: `tomix studio: Search Model` runs `tx find` over the
+      active model and presents matches in a QuickPick (names + expressions +
+      descriptions). Selecting a result opens the TMDL file at the object
+      declaration via `resolveLocationByPath`.

@@ -3,6 +3,7 @@ import * as vscode from 'vscode';
 import {
     registerCloseModelCommand,
     registerOpenFileAtLineCommand,
+    registerSearchCommand,
     registerSelectFolderCommand
 } from './commands';
 import { CliResolver, TomixCliClient } from './cli';
@@ -23,11 +24,13 @@ export function activate(context: vscode.ExtensionContext) {
         treeDataProvider: treeProvider,
         showCollapseAll: true
     });
+    treeProvider.attachTreeView(treeView);
     context.subscriptions.push(treeView);
 
     context.subscriptions.push(registerSelectFolderCommand(cli, treeProvider));
     context.subscriptions.push(registerCloseModelCommand(cli, treeProvider));
     context.subscriptions.push(registerOpenFileAtLineCommand());
+    context.subscriptions.push(registerSearchCommand(cli, treeProvider));
 
     context.subscriptions.push(
         vscode.workspace.onDidChangeConfiguration(event => {

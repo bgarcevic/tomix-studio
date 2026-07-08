@@ -78,6 +78,57 @@ export function resolveObjectLocation(modelPath: string, node: TreeNode): Object
     return undefined;
 }
 
+/**
+ * Resolves the source file and declaration line for a search result described
+ * by its `tx find` object type (e.g. "Measure", "Column") and object path
+ * (e.g. "Table/Child"). Decouples navigation from the tree-node shape so that
+ * search hits — which are not tree nodes — can still be opened.
+ */
+export function resolveLocationByPath(
+    modelPath: string,
+    objectType: string,
+    objectPath: string
+): ObjectLocation | undefined {
+    const definitionFolder = resolveDefinitionFolder(modelPath);
+    const kind = objectType.trim().toLowerCase();
+    const segments = objectPath.split('/');
+
+    if (kind === 'table') {
+        const tableName = segments[0];
+        return resolveByName(definitionFolder, 'table', tableName, candidateTableFiles(definitionFolder, tableName));
+    }
+
+    if (kind === 'column' || kind === 'measure' || kind === 'partition' || kind === 'hierarchy') {
+        const tableName = segments[0];
+        const childName = segments.slice(1).join('/') || segments[0];
+        const candidates = [
+            ...candidateTableFiles(definitionFolder, tableName),
+            ...candidateShardedChildFiles(definitionFolder, tableName, kind, childName)
+        ];
+        return resolveByName(definitionFolder, kind, childName, candidates);
+    }
+
+    if (kind === 'relationship') {
+        const relationshipsFile = path.join(definitionFolder, 'relationships.tmdl');
+        const guid = segments.length > 1 ? segments[segments.length - 1] : undefined;
+        if (guid) {
+            const line = findDeclarationLine(relationshipsFile, 'relationship', guid, { matchExact: true });
+            return line !== undefined
+                ? { filePath: relationshipsFile, lineNumber: line }
+                : { filePath: relationshipsFile };
+        }
+        return { filePath: relationshipsFile };
+    }
+
+    if (kind === 'culture') {
+        const cultureName = segments[segments.length - 1] || objectPath;
+        const file = path.join(definitionFolder, 'cultures', `${cultureName}.tmdl`);
+        return fs.existsSync(file) ? { filePath: file, lineNumber: 1 } : { filePath: file };
+    }
+
+    return undefined;
+}
+
 function resolveByName(
     definitionFolder: string,
     kind: 'table' | 'column' | 'measure' | 'partition' | 'hierarchy',

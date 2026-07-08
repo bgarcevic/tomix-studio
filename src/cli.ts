@@ -104,6 +104,27 @@ export interface TypedDoc {
 }
 
 /**
+ * Single match row from `tx find <pattern> --output-format json`.
+ */
+export interface SearchMatch {
+    objectPath: string;
+    objectType: string;
+    property: string;
+    matchedText: string;
+    line?: number;
+    position?: number;
+}
+
+/**
+ * Result envelope from `tx find <pattern> --output-format json`.
+ */
+export interface SearchResponse {
+    pattern: string;
+    matchCount: number;
+    matches: SearchMatch[];
+}
+
+/**
  * Connection state as emitted by `tx connect --output-format json`.
  */
 export interface ConnectionInfo {
@@ -282,6 +303,15 @@ export class TomixCliClient {
      */
     async listByType(type: 'relationship' | 'culture'): Promise<TypedDoc[]> {
         return this.runJson<TypedDoc[]>(['ls', '--type', type]);
+    }
+
+    /**
+     * `tx find <pattern> --output-format json` — full-text search across the
+     * active model (names, expressions, descriptions, display folders,
+     * format strings, annotations).
+     */
+    async find(pattern: string): Promise<SearchResponse> {
+        return this.runJson<SearchResponse>(['find', pattern]);
     }
 
     private async runJson<T>(args: string[]): Promise<T> {

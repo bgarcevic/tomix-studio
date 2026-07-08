@@ -47,6 +47,12 @@
         "command": "tomix-studio.openFileAtLine",
         "title": "Open File at Line",
         "category": "tomix studio"
+      },
+      {
+        "command": "tomix-studio.search",
+        "title": "Search Model",
+        "category": "tomix studio",
+        "icon": "$(search)"
       }
     ],
     "menus": {
@@ -62,6 +68,10 @@
         {
           "command": "tomix-studio.closeModel",
           "when": "tomix-studio.modelOpen"
+        },
+        {
+          "command": "tomix-studio.search",
+          "when": "tomix-studio.modelOpen"
         }
       ],
       "view/title": [
@@ -74,6 +84,11 @@
           "command": "tomix-studio.closeModel",
           "when": "view == 'tomix-studio.explorer' && tomix-studio.modelOpen",
           "group": "navigation@2"
+        },
+        {
+          "command": "tomix-studio.search",
+          "when": "view == 'tomix-studio.explorer' && tomix-studio.modelOpen",
+          "group": "navigation@3"
         }
       ]
     },
